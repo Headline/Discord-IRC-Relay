@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IRCServer>server</IRCServer>
+  <IRCPort>port</IRCPort>
+  <IRCChannel>#channel</IRCChannel>
+  
+  <DiscordBotToken>token</DiscordBotToken>
+  <DiscordGuildName>server name</DiscordGuildName>
+  <DiscordChannelName>text channel</DiscordChannelName>
+</Config>
