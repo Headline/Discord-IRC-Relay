@@ -117,6 +117,11 @@ namespace IRCRelay
                 return;
             }
 
+            if (e.Data.Nick.Contains("discord-relay"))
+            {
+                return;
+            }
+
             SendMessageAllToTarget(Config.Config.Instance.DiscordGuildName, "<" + e.Data.Nick + "> " + e.Data.Message, Config.Config.Instance.DiscordChannelName);
         }
 
@@ -152,8 +157,6 @@ namespace IRCRelay
             return null;
         }
 
-
-
         public async Task OnDiscordMessage(SocketMessage messageParam)
         {
             var message = messageParam as SocketUserMessage;
@@ -163,7 +166,17 @@ namespace IRCRelay
 
             if (message.HasCharPrefix('!', ref argPos)) return;
 
+            if (!messageParam.Channel.Name.Contains("irc")) return;
+            if (messageParam.Author.IsBot) return;
+
             // Send IRC Message
+            if (messageParam.Content.Length > 200)
+            {
+                await messageParam.Channel.SendMessageAsync("Error: messages > 200 characters cannot be sent!");
+                return;
+            }
+
+            Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, messageParam.Author.Username + ": " + messageParam.Content);
         }
 
         public Task Log(LogMessage msg)
