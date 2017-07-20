@@ -53,11 +53,13 @@ namespace IRCRelay
 
             services = new ServiceCollection().BuildServiceProvider();
 
-            await InstallCommands();
+            client.MessageReceived += OnDiscordMessage;
 
             await client.LoginAsync(TokenType.Bot, Config.Config.Instance.DiscordBotToken);
             await client.StartAsync();
+            
 
+            
             new Thread(() =>
             {
                 IRC.Encoding = System.Text.Encoding.UTF8;
@@ -150,26 +152,18 @@ namespace IRCRelay
             return null;
         }
 
-        private async Task InstallCommands()
-        {
-            client.MessageReceived += HandleCommand;
-            await commands.AddModulesAsync(Assembly.GetEntryAssembly());
-        }
 
-        public async Task HandleCommand(SocketMessage messageParam)
+
+        public async Task OnDiscordMessage(SocketMessage messageParam)
         {
             var message = messageParam as SocketUserMessage;
             if (message == null) return;
 
             int argPos = 0;
 
-            if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(client.CurrentUser, ref argPos))) return;
+            if (message.HasCharPrefix('!', ref argPos)) return;
 
-            var context = new CommandContext(client, message);
-
-            var result = await commands.ExecuteAsync(context, argPos, services);
-            if (!result.IsSuccess)
-                await context.Channel.SendMessageAsync(result.ErrorReason);
+            // Send IRC Message
         }
 
         public Task Log(LogMessage msg)
