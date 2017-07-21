@@ -6,3 +6,6 @@ A Discord bot that relays irc messages to a Discord channel. This bot's goal is 
 - Configure Settings.xml
 - Ensure Settings.xml is alongside the executable
 - Run the executable!
+
+## Credits 
+Much of the code was adapted from [VoiDeD's bot](https://github.com/VoiDeD/steam-irc-bot/), so many thanks for the guidance. Also I'd like to thank the guys on #opensteamworks in gamesurge irc.
