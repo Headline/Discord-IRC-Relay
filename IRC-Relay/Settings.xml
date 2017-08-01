@@ -3,6 +3,7 @@
   <IRCServer>server</IRCServer>
   <IRCPort>port</IRCPort>
   <IRCChannel>#channel</IRCChannel>
+  <AuthString>some command here</AuthString>
   
   <DiscordBotToken>token</DiscordBotToken>
   <DiscordGuildName>server name</DiscordGuildName>
