@@ -176,7 +176,7 @@ namespace IRCRelay
                 return;
             }
 
-            Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, messageParam.Author.Username + ": " + messageParam.Content);
+            Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + messageParam.Content);
         }
 
         public Task Log(LogMessage msg)
