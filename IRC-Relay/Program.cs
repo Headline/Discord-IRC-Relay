@@ -67,9 +67,14 @@ namespace IRCRelay
 
                 IRC.ActiveChannelSyncing = true;
 
+                IRC.AutoRetry = true;
+                IRC.AutoRejoin = true;
+                IRC.AutoRelogin = true;
+                IRC.AutoRejoinOnKick = true;
+
                 IRC.OnError += new ErrorEventHandler(OnError);
                 IRC.OnChannelMessage += new IrcEventHandler(OnChannelMessage);
-
+                IRC.OnConnected += new EventHandler(OnConnected);
 
                 int port;
                 int.TryParse(Config.Config.Instance.IRCPort, out port);
@@ -88,7 +93,8 @@ namespace IRCRelay
 
                 try
                 {
-                    IRC.Login("discord-relay", "Discord - IRC Relay");
+                    IRC.Login("r", "Discord - IRC Relay"); // todo: make this configurable in settings.xml
+
                     IRC.RfcJoin(channel);
 
                     IRC.Listen();
@@ -104,6 +110,12 @@ namespace IRCRelay
             await Task.Delay(-1);
         }
 
+        public static void OnConnected(object sender, EventArgs e)
+        {
+            IRC.SendMessage(SendType.Message, "AuthServ@Services.Gamesurge.net", Config.Config.Instance.AuthString);
+            //Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, Config.Config.Instance.IRCCommand);
+        }
+
         public static void OnError(object sender, ErrorEventArgs e)
         {
             System.Console.WriteLine("Error: " + e.ErrorMessage);
@@ -117,7 +129,7 @@ namespace IRCRelay
                 return;
             }
 
-            if (e.Data.Nick.Contains("discord-relay"))
+            if (e.Data.Nick.Equals("r"))
             {
                 return;
             }

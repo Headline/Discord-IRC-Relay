@@ -11,6 +11,7 @@ namespace IRCRelay.Config
 		public string IRCServer;
 		public string IRCPort;
         public string IRCChannel;
+        public string AuthString;
 
         public string DiscordBotToken;
         public string DiscordGuildName;
@@ -38,6 +39,7 @@ namespace IRCRelay.Config
             Config.Instance.IRCServer = "server";
             Config.Instance.IRCPort = "port";
             Config.Instance.IRCChannel = "#channel";
+            Config.Instance.AuthString = "some command here";
 
             Config.Instance.DiscordBotToken = "token";
             Config.Instance.DiscordGuildName = "server name";
