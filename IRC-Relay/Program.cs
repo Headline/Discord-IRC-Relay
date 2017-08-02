@@ -186,9 +186,9 @@ namespace IRCRelay
             string formatted = MentionToUsername(messageParam.Content, message);
 
             // Send IRC Message
-            if (messageParam.Content.Length > 200)
+            if (messageParam.Content.Length > 500)
             {
-                await messageParam.Channel.SendMessageAsync("Error: messages > 200 characters cannot be sent!");
+                await messageParam.Channel.SendMessageAsync("Error: messages > 500 characters cannot be sent!");
                 return;
             }
 
