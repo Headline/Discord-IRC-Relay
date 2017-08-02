@@ -13,6 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Meebey.SmartIrc4net;
 
+using System.Text.RegularExpressions;
+
 namespace IRCRelay
 {
     class Program
@@ -178,8 +180,10 @@ namespace IRCRelay
 
             if (message.HasCharPrefix('!', ref argPos)) return;
 
-            if (!messageParam.Channel.Name.Contains("irc")) return;
+            if (!messageParam.Channel.Name.Contains(Config.Config.Instance.DiscordChannelName)) return;
             if (messageParam.Author.IsBot) return;
+
+            string formatted = MentionToUsername(messageParam.Content, message);
 
             // Send IRC Message
             if (messageParam.Content.Length > 200)
@@ -188,7 +192,29 @@ namespace IRCRelay
                 return;
             }
 
-            Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + messageParam.Content);
+            Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + formatted);
+        
+            Console.WriteLine("Sending discord message....");
+
+        }
+
+        public string MentionToUsername(string input, SocketUserMessage message)
+        {
+            string returnString = message.Content;
+
+            Regex regex = new Regex("<@[0-9]+>");
+            Match match = regex.Match(input);
+            if (match.Success) // contains a mention
+            {
+                string substring = input.Substring(match.Index, match.Length);
+
+                SocketUser user = message.MentionedUsers.First();
+                
+
+                returnString = message.Content.Replace(substring, user.Username + ":");
+            }
+
+            return returnString;
         }
 
         public Task Log(LogMessage msg)
