@@ -14,6 +14,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Meebey.SmartIrc4net;
 
 using System.Text.RegularExpressions;
+using System.Net;
+using System.IO;
+using System.Text;
+
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace IRCRelay
 {
@@ -74,7 +80,7 @@ namespace IRCRelay
                 IRC.AutoRelogin = true;
                 IRC.AutoRejoinOnKick = true;
 
-                IRC.OnError += new ErrorEventHandler(OnError);
+                IRC.OnError += new Meebey.SmartIrc4net.ErrorEventHandler(OnError);
                 IRC.OnChannelMessage += new IrcEventHandler(OnChannelMessage);
                 IRC.OnConnected += new EventHandler(OnConnected);
 
@@ -118,7 +124,7 @@ namespace IRCRelay
             //Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, Config.Config.Instance.IRCCommand);
         }
 
-        public static void OnError(object sender, ErrorEventArgs e)
+        public static void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
         {
             System.Console.WriteLine("Error: " + e.ErrorMessage);
             Environment.Exit(0);
@@ -173,6 +179,7 @@ namespace IRCRelay
 
         public async Task OnDiscordMessage(SocketMessage messageParam)
         {
+            string url = "";
             var message = messageParam as SocketUserMessage;
             if (message == null) return;
 
@@ -185,6 +192,25 @@ namespace IRCRelay
 
             string formatted = MentionToUsername(messageParam.Content, message);
 
+            Console.WriteLine("Trying to send: " + formatted);
+
+            string text = "```";
+            if (formatted.Contains(text))
+            {
+                int start = formatted.IndexOf(text);
+                int end = formatted.IndexOf(text, start + text.Length);
+                Console.WriteLine("Starting index: {0} | Ending index: {1}", start, end);
+
+                string code = formatted.Substring(start+text.Length, (end - start) - text.Length);
+                Console.WriteLine("Code value: {0}", code);
+
+                url = UploadMarkDown(code);
+                Console.WriteLine("URL: {0}", url);
+
+                formatted = formatted.Remove(start, ( end - start ) + text.Length);
+                Console.WriteLine("Formatted: {0}", formatted);
+            }
+
             // Send IRC Message
             if (messageParam.Content.Length > 500)
             {
@@ -193,9 +219,34 @@ namespace IRCRelay
             }
 
             Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + formatted);
-        
-            Console.WriteLine("Sending discord message....");
+            if (!url.Equals(""))
+            {
+                Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + url);
+            }
 
+            Console.WriteLine("Sending discord message....");
+        }
+
+        public static string UploadMarkDown(string input)
+        {
+
+            using (var client = new WebClient())
+            {
+                client.Headers[HttpRequestHeader.ContentType] = "text/plain";
+                
+                var response = client.UploadString("https://hastebin.com/documents", input);
+                JObject obj = JObject.Parse(response);
+
+                if (!obj.HasValues)
+                {
+                    return "";
+                }
+
+                string key = (string)obj["key"];
+                string hasteUrl = "https://hastebin.com/" + key + ".cs";
+                
+                return hasteUrl;
+            }
         }
 
         public string MentionToUsername(string input, SocketUserMessage message)
