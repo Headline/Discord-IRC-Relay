@@ -74,7 +74,11 @@ namespace IRCRelay
                 return;
             }
 
-            Helpers.SendMessageAllToTarget(Config.Config.Instance.DiscordGuildName, "<" + e.Data.Nick + "> " + e.Data.Message, Config.Config.Instance.DiscordChannelName);
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("IRC -> Discord <" + e.Data.Nick + ">: " + e.Data.Message);
+            Console.ForegroundColor = ConsoleColor.White;
+
+            Helpers.SendMessageAllToTarget(Config.Config.Instance.DiscordGuildName, "**<" + e.Data.Nick + ">** " + e.Data.Message, Config.Config.Instance.DiscordChannelName);
         }
     }
 }

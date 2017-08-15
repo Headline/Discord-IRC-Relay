@@ -81,41 +81,44 @@ namespace IRCRelay
             if (!messageParam.Channel.Name.Contains(Config.Config.Instance.DiscordChannelName)) return;
             if (messageParam.Author.IsBot) return;
 
+            /* Santize discord-specific notation to human readable things */
             string formatted = Helpers.MentionToUsername(messageParam.Content, message);
-
-            Console.WriteLine("Trying to send: " + formatted);
+            formatted = Helpers.EmojiToName(formatted, message);
+            formatted = Helpers.ChannelMentionToName(formatted, message);
 
             string text = "```";
             if (formatted.Contains(text))
             {
                 int start = formatted.IndexOf(text);
                 int end = formatted.IndexOf(text, start + text.Length);
-                Console.WriteLine("Starting index: {0} | Ending index: {1}", start, end);
 
                 string code = formatted.Substring(start+text.Length, (end - start) - text.Length);
-                Console.WriteLine("Code value: {0}", code);
 
                 url = Helpers.UploadMarkDown(code);
-                Console.WriteLine("URL: {0}", url);
 
                 formatted = formatted.Remove(start, ( end - start ) + text.Length);
-                Console.WriteLine("Formatted: {0}", formatted);
             }
 
             // Send IRC Message
-            if (messageParam.Content.Length > 500)
+            if (messageParam.Content.Length > 1000)
             {
-                await messageParam.Channel.SendMessageAsync("Error: messages > 500 characters cannot be sent!");
+                await messageParam.Channel.SendMessageAsync("Error: messages > 1000 characters cannot be sent!");
                 return;
             }
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("Discord -> IRC <" + messageParam.Author.Username + ">: " + formatted);
 
             Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + formatted);
             if (!url.Equals(""))
             {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("Discord -> IRC <" + messageParam.Author.Username + ">: " + url);
+
                 Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + url);
             }
 
-            Console.WriteLine("Sending discord message....");
+            Console.ForegroundColor = ConsoleColor.White;
         }
 
         public Task Log(LogMessage msg)

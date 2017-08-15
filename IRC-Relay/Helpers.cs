@@ -46,7 +46,44 @@ namespace IRCRelay
                 SocketUser user = message.MentionedUsers.First();
 
 
-                returnString = message.Content.Replace(substring, user.Username + ":");
+                returnString = input.Replace(substring, user.Username + ":");
+            }
+
+            return returnString;
+        }
+
+        public static string ChannelMentionToName(string input, SocketUserMessage message)
+        {
+            string returnString = input;
+
+            Regex regex = new Regex("<#[0-9]+>");
+            Match match = regex.Match(input);
+            if (match.Success) // contains a mention
+            {
+                string substring = input.Substring(match.Index, match.Length);
+
+                var chan = message.MentionedChannels.First();
+
+
+                returnString = input.Replace(substring, "#" + chan.Name);
+            }
+
+            return returnString;
+        }
+
+        // Converts <:emoji:23598052306> to :emoji:
+        public static string EmojiToName(string input, SocketUserMessage message)
+        {
+            string returnString = input;
+
+            Regex regex = new Regex("<:[a-z]+:[0-9]+>");
+            Match match = regex.Match(input);
+            if (match.Success) // contains a mention
+            {
+                string substring = input.Substring(match.Index, match.Length);
+                string[] sections = substring.Split(':');
+
+                returnString = input.Replace(substring, ":" + sections[1] + ":");
             }
 
             return returnString;
@@ -62,7 +99,6 @@ namespace IRCRelay
 
                     if (channel != null) // target exists
                     {
-                        Program.Instance.Log(new LogMessage(LogSeverity.Info, "SendMsg", "Sending msg to: " + channel.Name));
                         channel.SendMessageAsync(message);
                     }
                 }
@@ -71,8 +107,6 @@ namespace IRCRelay
 
         public static SocketTextChannel FindChannel(SocketGuild guild, string text)
         {
-            Program.Instance.Log(new LogMessage(LogSeverity.Info, "SendMsg", "Trying to find #" + text + " in: " + guild.Name));
-
             foreach (SocketTextChannel channel in guild.TextChannels)
             {
                 if (channel.Name.Contains(text))
