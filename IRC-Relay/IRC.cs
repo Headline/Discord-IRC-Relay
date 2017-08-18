@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Linq;
 
 using Meebey.SmartIrc4net;
+using System.Collections;
 
 namespace IRCRelay
 {
     public class IRC
     {
+        public static readonly string operatorPrefix = "@";
+        public static readonly string voicePrefix = "+";
+
         public static void SpawnBot()
         {
             Program.IRC.Encoding = System.Text.Encoding.UTF8;
@@ -50,6 +55,7 @@ namespace IRCRelay
                 Console.WriteLine(ex.Message);
             }
         }
+
         public static void OnConnected(object sender, EventArgs e)
         {
             Program.IRC.SendMessage(SendType.Message, "authserv@services.gamesurge.net", Config.Config.Instance.AuthString);
@@ -57,7 +63,7 @@ namespace IRCRelay
 
         public static void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
         {
-            System.Console.WriteLine("Error: " + e.ErrorMessage);
+            Console.WriteLine("Error: " + e.ErrorMessage);
             Environment.Exit(0);
         }
 
@@ -73,11 +79,14 @@ namespace IRCRelay
                 return;
             }
 
+            string name = Helpers.GetFormattedName(e.Data);
+
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("IRC -> Discord <" + e.Data.Nick + ">: " + e.Data.Message);
+            Console.WriteLine("IRC -> Discord <" + name + ">: " + e.Data.Message);
             Console.ForegroundColor = ConsoleColor.White;
 
-            Helpers.SendMessageAllToTarget(Config.Config.Instance.DiscordGuildName, "**<" + e.Data.Nick + ">** " + e.Data.Message, Config.Config.Instance.DiscordChannelName);
+
+            Helpers.SendMessageAllToTarget(Config.Config.Instance.DiscordGuildName, "**<" + name + ">** " + e.Data.Message, Config.Config.Instance.DiscordChannelName);
         }
     }
 }

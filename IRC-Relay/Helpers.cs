@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 
 using Discord;
 using Discord.WebSocket;
+using Meebey.SmartIrc4net;
+using System.Collections;
 
 namespace IRCRelay
 {
@@ -116,6 +118,62 @@ namespace IRCRelay
             }
 
             return null;
+        }
+
+        public static string GetFormattedName(IrcMessageData data)
+        {
+            string name;
+
+            if (IsOperator(data))
+            {
+                name = IRC.operatorPrefix + data.Nick;
+            }
+            else if (IsVoiced(data))
+            {
+                name = IRC.voicePrefix + data.Nick;
+            }
+            else
+            {
+                name = data.Nick;
+            }
+
+            return name;
+        }
+
+        public static bool IsOperator(IrcMessageData data)
+        {
+            var channel = Program.IRC.GetChannel(Config.Config.Instance.IRCChannel);
+
+            foreach (DictionaryEntry d in channel.Ops)
+            {
+                string key = (string)d.Key;
+                ChannelUser user = (ChannelUser)d.Value;
+
+                if (user.Nick.Equals(data.Nick))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool IsVoiced(IrcMessageData data)
+        {
+            var channel = Program.IRC.GetChannel(Config.Config.Instance.IRCChannel);
+
+            foreach (DictionaryEntry d in channel.Voices)
+            {
+                string key = (string)d.Key;
+                ChannelUser user = (ChannelUser)d.Value;
+
+                if (user.Nick.Equals(data.Nick))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
