@@ -106,10 +106,14 @@ namespace IRCRelay
                 return;
             }
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("Discord -> IRC <" + messageParam.Author.Username + ">: " + formatted);
+            if (formatted.Replace(" ", "").Replace("\n", "").Length != 0) // if the string is empty or just spaces
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("Discord -> IRC <" + messageParam.Author.Username + ">: " + formatted);
 
-            Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + formatted);
+                Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + formatted);
+            }
+
             if (!url.Equals(""))
             {
                 Console.ForegroundColor = ConsoleColor.Cyan;
