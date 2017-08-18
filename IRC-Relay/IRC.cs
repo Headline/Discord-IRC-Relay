@@ -3,6 +3,7 @@ using System.Linq;
 
 using Meebey.SmartIrc4net;
 using System.Collections;
+using System.Threading;
 
 namespace IRCRelay
 {
@@ -25,10 +26,8 @@ namespace IRCRelay
 
             Program.IRC.OnError += new Meebey.SmartIrc4net.ErrorEventHandler(IRCRelay.IRC.OnError);
             Program.IRC.OnChannelMessage += new IrcEventHandler(IRCRelay.IRC.OnChannelMessage);
-            Program.IRC.OnConnected += new EventHandler(IRCRelay.IRC.OnConnected);
             
-            int port;
-            int.TryParse(Config.Config.Instance.IRCPort, out port);
+            int.TryParse(Config.Config.Instance.IRCPort, out int port);
 
             string channel = Config.Config.Instance.IRCChannel;
 
@@ -46,6 +45,9 @@ namespace IRCRelay
             {
                 Program.IRC.Login("r", "discord-relay"); // todo: make this configurable in settings.xml
 
+                Program.IRC.SendMessage(SendType.Message, "authserv@services.gamesurge.net", Config.Config.Instance.AuthString);
+                Thread.Sleep(1000);
+
                 Program.IRC.RfcJoin(channel);
 
                 Program.IRC.Listen();
@@ -54,11 +56,6 @@ namespace IRCRelay
             {
                 Console.WriteLine(ex.Message);
             }
-        }
-
-        public static void OnConnected(object sender, EventArgs e)
-        {
-            Program.IRC.SendMessage(SendType.Message, "authserv@services.gamesurge.net", Config.Config.Instance.AuthString);
         }
 
         public static void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
@@ -79,14 +76,13 @@ namespace IRCRelay
                 return;
             }
 
-            string name = Helpers.GetFormattedName(e.Data);
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("IRC -> Discord <" + name + ">: " + e.Data.Message);
+            Console.WriteLine("IRC -> Discord <" + e.Data.Nick + ">: " + e.Data.Message);
             Console.ForegroundColor = ConsoleColor.White;
 
 
-            Helpers.SendMessageAllToTarget(Config.Config.Instance.DiscordGuildName, "**<" + name + ">** " + e.Data.Message, Config.Config.Instance.DiscordChannelName);
+            Helpers.SendMessageAllToTarget(Config.Config.Instance.DiscordGuildName, "**<" + e.Data.Nick + ">** " + e.Data.Message, Config.Config.Instance.DiscordChannelName);
         }
     }
 }

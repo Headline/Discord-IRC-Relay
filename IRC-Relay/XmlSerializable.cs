@@ -19,8 +19,6 @@ namespace IRCRelay.Config
 				fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 				XmlSerializer xs = new XmlSerializer(typeof(T));
 				ret = (T)xs.Deserialize(fs);
-
-				fs.Close();
 			}
 			catch (Exception)
 			{
@@ -43,7 +41,6 @@ namespace IRCRelay.Config
 				fs = File.Create(fileName);
 				XmlSerializer xs = new XmlSerializer(typeof(T));
 				xs.Serialize(fs, data);
-				fs.Close();
 
 				return true;
 			}
@@ -60,12 +57,14 @@ namespace IRCRelay.Config
 
 		public bool Save(string fileName)
 		{
-			T data = this as T;
-
-			if (data != null)
-				return Save(fileName, data);
-			else
-				return false;
+            if (this is T s)
+            {
+                return Save(fileName, s);
+            }
+            else
+            {
+                return false;
+            }
 		}
 	}
 }
