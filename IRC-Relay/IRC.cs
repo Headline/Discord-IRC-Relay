@@ -21,7 +21,7 @@ namespace IRCRelay
             Program.IRC.OnError += new Meebey.SmartIrc4net.ErrorEventHandler(IRCRelay.IRC.OnError);
             Program.IRC.OnChannelMessage += new IrcEventHandler(IRCRelay.IRC.OnChannelMessage);
             Program.IRC.OnConnected += new EventHandler(IRCRelay.IRC.OnConnected);
-
+            
             int port;
             int.TryParse(Config.Config.Instance.IRCPort, out port);
 
@@ -39,7 +39,7 @@ namespace IRCRelay
 
             try
             {
-                Program.IRC.Login("r", "Discord - IRC Relay"); // todo: make this configurable in settings.xml
+                Program.IRC.Login("r", "discord-relay"); // todo: make this configurable in settings.xml
 
                 Program.IRC.RfcJoin(channel);
 
@@ -52,8 +52,7 @@ namespace IRCRelay
         }
         public static void OnConnected(object sender, EventArgs e)
         {
-            Program.IRC.SendMessage(SendType.Message, "AuthServ@Services.Gamesurge.net", Config.Config.Instance.AuthString);
-            //Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, Config.Config.Instance.IRCCommand);
+            Program.IRC.SendMessage(SendType.Message, "authserv@services.gamesurge.net", Config.Config.Instance.AuthString);
         }
 
         public static void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
