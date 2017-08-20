@@ -9,7 +9,7 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 
 using Meebey.SmartIrc4net;
-
+using IRCRelay.Logs;
 
 namespace IRCRelay
 {
@@ -21,7 +21,7 @@ namespace IRCRelay
 
         public static IrcClient IRC;
         public static Program Instance;
-
+        
         public static void Main(string[] args)
         {
             Instance = new Program();
@@ -38,7 +38,7 @@ namespace IRCRelay
                 Config.Config.Instance.Save();
                 return;
             }
-            
+
             Instance.MainAsync().GetAwaiter().GetResult();
         }
 
@@ -92,11 +92,11 @@ namespace IRCRelay
                 int start = formatted.IndexOf(text);
                 int end = formatted.IndexOf(text, start + text.Length);
 
-                string code = formatted.Substring(start+text.Length, (end - start) - text.Length);
+                string code = formatted.Substring(start + text.Length, (end - start) - text.Length);
 
                 url = Helpers.UploadMarkDown(code);
 
-                formatted = formatted.Remove(start, ( end - start ) + text.Length);
+                formatted = formatted.Remove(start, (end - start) + text.Length);
             }
 
             // Send IRC Message
@@ -106,23 +106,21 @@ namespace IRCRelay
                 return;
             }
 
-            if (formatted.Replace(" ", "").Replace("\n", "").Length != 0) // if the string is empty or just spaces
+            if (formatted.Replace(" ", "").Replace("\n", "").Length != 0) // if the string is not empty or just spaces
             {
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("Discord -> IRC <" + messageParam.Author.Username + ">: " + formatted);
+                if (Config.Config.Instance.IRCLogMessages)
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");
 
                 Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + formatted);
             }
 
             if (!url.Equals(""))
             {
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("Discord -> IRC <" + messageParam.Author.Username + ">: " + url);
+                if (Config.Config.Instance.IRCLogMessages)
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, url, "log.txt");
 
                 Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + url);
             }
-
-            Console.ForegroundColor = ConsoleColor.White;
         }
 
         public Task Log(LogMessage msg)

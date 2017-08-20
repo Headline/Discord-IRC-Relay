@@ -4,6 +4,7 @@ using System.Linq;
 using Meebey.SmartIrc4net;
 using System.Collections;
 using System.Threading;
+using IRCRelay.Logs;
 
 namespace IRCRelay
 {
@@ -43,10 +44,14 @@ namespace IRCRelay
 
             try
             {
-                Program.IRC.Login("r", "discord-relay"); // todo: make this configurable in settings.xml
+                Program.IRC.Login(Config.Config.Instance.IRCNick, Config.Config.Instance.IRCLoginName);
 
-                Program.IRC.SendMessage(SendType.Message, "authserv@services.gamesurge.net", Config.Config.Instance.AuthString);
-                Thread.Sleep(1000);
+                if (Config.Config.Instance.IRCAuthString.Length != 0)
+                {
+                    Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCAuthUser, Config.Config.Instance.IRCAuthString);
+
+                    Thread.Sleep(1000); // login delay
+                }
 
                 Program.IRC.RfcJoin(channel);
 
@@ -76,11 +81,8 @@ namespace IRCRelay
                 return;
             }
 
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("IRC -> Discord <" + e.Data.Nick + ">: " + e.Data.Message);
-            Console.ForegroundColor = ConsoleColor.White;
-
+            if (Config.Config.Instance.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.IRCToDiscord, e.Data.Nick, e.Data.Message, "log.txt");
 
             Helpers.SendMessageAllToTarget(Config.Config.Instance.DiscordGuildName, "**<" + e.Data.Nick + ">** " + e.Data.Message, Config.Config.Instance.DiscordChannelName);
         }

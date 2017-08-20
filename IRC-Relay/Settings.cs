@@ -10,7 +10,13 @@ namespace IRCRelay.Config
 		public string IRCServer;
 		public string IRCPort;
         public string IRCChannel;
-        public string AuthString;
+        public string IRCNick;
+
+        public bool IRCLogMessages;
+
+        public string IRCAuthUser;
+        public string IRCLoginName;
+        public string IRCAuthString;
 
         public string DiscordBotToken;
         public string DiscordGuildName;
@@ -33,19 +39,24 @@ namespace IRCRelay.Config
 		// Used to load the default configuration if Load() fails.
 		public static void Default()
         {
-			Config.Instance = new Config();
+            Config.Instance = new Config()
+            {
+                IRCServer = "server",
+                IRCPort = "port",
+                IRCChannel = "#channel",
+                IRCNick = "nick",
 
-            Config.Instance.IRCServer = "server";
-            Config.Instance.IRCPort = "port";
-            Config.Instance.IRCChannel = "#channel";
-            Config.Instance.AuthString = "some command here";
+                IRCLoginName = "auth login name",
+                IRCAuthString = "some command here",
+                IRCAuthUser = "some user",
 
-            Config.Instance.DiscordBotToken = "token";
-            Config.Instance.DiscordGuildName = "server name";
-            Config.Instance.DiscordChannelName = "text channel";
+                DiscordBotToken = "token",
+                DiscordGuildName = "server name",
+                DiscordChannelName = "text channel"
+            };
         }
 
-    // Loads the configuration from file.
+        // Loads the configuration from file.
         public static void Load()
 		{
 			var serializer = new XmlSerializer(typeof(Config));
