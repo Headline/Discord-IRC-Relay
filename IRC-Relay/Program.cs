@@ -100,7 +100,7 @@ namespace IRCRelay
             }
 
             // Send IRC Message
-            if (messageParam.Content.Length > 1000)
+            if (formatted.Length > 1000)
             {
                 await messageParam.Channel.SendMessageAsync("Error: messages > 1000 characters cannot be sent!");
                 return;
