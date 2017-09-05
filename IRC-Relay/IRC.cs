@@ -4,6 +4,7 @@ using System.Linq;
 using Meebey.SmartIrc4net;
 using System.Collections;
 using System.Threading;
+using System.Timers;
 using IRCRelay.Logs;
 
 namespace IRCRelay
@@ -12,6 +13,7 @@ namespace IRCRelay
     {
         public static readonly string operatorPrefix = "@";
         public static readonly string voicePrefix = "+";
+        public static System.Timers.Timer timer = null;
 
         public static void SpawnBot()
         {
@@ -27,7 +29,8 @@ namespace IRCRelay
 
             Program.IRC.OnError += new Meebey.SmartIrc4net.ErrorEventHandler(IRCRelay.IRC.OnError);
             Program.IRC.OnChannelMessage += new IrcEventHandler(IRCRelay.IRC.OnChannelMessage);
-            
+            Program.IRC.OnDisconnected += new EventHandler(IRC.OnDisconnected);
+
             int.TryParse(Config.Config.Instance.IRCPort, out int port);
 
             string channel = Config.Config.Instance.IRCChannel;
@@ -56,11 +59,38 @@ namespace IRCRelay
                 Program.IRC.RfcJoin(channel);
 
                 Program.IRC.Listen();
+
+                timer = new System.Timers.Timer();
+
+                timer.Elapsed += Timer_Callback;
+
+                timer.Enabled = true;
+                timer.AutoReset = true;
+                timer.Interval = TimeSpan.FromSeconds(30.0).TotalMilliseconds;
+                timer.Start();
+
+            
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+
+        private static void Timer_Callback(Object source, ElapsedEventArgs e)
+        {
+            if (Program.IRC.IsConnected)
+            {
+                return;
+            }
+
+            Console.WriteLine("Bot disconnected! Retrying...");
+            IRC.SpawnBot();
+        }
+
+        public static void OnDisconnected(object sender, EventArgs e)
+        {
+            Console.WriteLine("Disconnecting");
         }
 
         public static void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
