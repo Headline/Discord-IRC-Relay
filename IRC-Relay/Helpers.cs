@@ -41,7 +41,7 @@ namespace IRCRelay
         {
             string returnString = message.Content;
 
-            Regex regex = new Regex("<@[0-9]+>");
+            Regex regex = new Regex("<@!?[0-9]+>");
             Match match = regex.Match(input);
             if (match.Success) // contains a mention
             {
@@ -50,7 +50,7 @@ namespace IRCRelay
                 SocketUser user = message.MentionedUsers.First();
 
 
-                returnString = input.Replace(substring, user.Username + ":");
+                returnString = input.Replace(substring, user.Username);
             }
 
             return returnString;
