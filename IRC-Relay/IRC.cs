@@ -11,8 +11,6 @@ namespace IRCRelay
 {
     public class IRC
     {
-        public static readonly string operatorPrefix = "@";
-        public static readonly string voicePrefix = "+";
         public static System.Timers.Timer timer = null;
 
         public static void SpawnBot()
