@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Discord;
@@ -8,7 +7,6 @@ using Discord.Commands;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Meebey.SmartIrc4net;
 using IRCRelay.Logs;
 
 namespace IRCRelay
