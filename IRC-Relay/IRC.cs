@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 
 using Meebey.SmartIrc4net;
-using System.Collections;
 using System.Threading;
 using System.Timers;
 using IRCRelay.Logs;
@@ -11,95 +9,115 @@ namespace IRCRelay
 {
     public class IRC
     {
-        public static System.Timers.Timer timer = null;
+		private IrcClient ircClient;
+		private System.Timers.Timer timer = null;
 
-        public static void SpawnBot()
+        private string server;
+        private int port;
+        private string nick;
+        private string channel;
+        private string loginName;
+        private string authstring;
+        private string authuser;
+
+		public IRC(string server, int port, string nick, string channel, string loginName, string authstring, string authuser)
         {
-            Program.IRC.Encoding = System.Text.Encoding.UTF8;
-            Program.IRC.SendDelay = 200;
+            ircClient = new IrcClient();
 
-            Program.IRC.ActiveChannelSyncing = true;
+			ircClient.Encoding = System.Text.Encoding.UTF8;
+			ircClient.SendDelay = 200;
 
-            Program.IRC.AutoRetry = true;
-            Program.IRC.AutoRejoin = true;
-            Program.IRC.AutoRelogin = true;
-            Program.IRC.AutoRejoinOnKick = true;
+			ircClient.ActiveChannelSyncing = true;
 
-            Program.IRC.OnError += new Meebey.SmartIrc4net.ErrorEventHandler(IRCRelay.IRC.OnError);
-            Program.IRC.OnChannelMessage += new IrcEventHandler(IRCRelay.IRC.OnChannelMessage);
-            Program.IRC.OnDisconnected += new EventHandler(IRC.OnDisconnected);
+			ircClient.AutoRetry = true;
+			ircClient.AutoRejoin = true;
+			ircClient.AutoRelogin = true;
+			ircClient.AutoRejoinOnKick = true;
 
-            int.TryParse(Config.Config.Instance.IRCPort, out int port);
+			ircClient.OnError += new Meebey.SmartIrc4net.ErrorEventHandler(IRCRelay.IRC.OnError);
+			ircClient.OnChannelMessage += new IrcEventHandler(IRCRelay.IRC.OnChannelMessage);
+			ircClient.OnDisconnected += new EventHandler(IRC.OnDisconnected);
 
-            string channel = Config.Config.Instance.IRCChannel;
+			timer = new System.Timers.Timer();
 
-            try
-            {
-                Program.IRC.Connect(Config.Config.Instance.IRCServer, port);
-            }
-            catch (ConnectionException e)
-            {
-                System.Console.WriteLine("couldn't connect! Reason: " + e.Message);
-                return;
-            }
+			timer.Elapsed += Timer_Callback;
 
-            try
-            {
-                Program.IRC.Login(Config.Config.Instance.IRCNick, Config.Config.Instance.IRCLoginName);
+			timer.Enabled = true;
+			timer.AutoReset = true;
+            timer.Interval = TimeSpan.FromSeconds(30.0).TotalMilliseconds;
 
-                if (Config.Config.Instance.IRCAuthString.Length != 0)
-                {
-                    Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCAuthUser, Config.Config.Instance.IRCAuthString);
+            /* Connection Info */
+			this.server = server;
+			this.port = port;
+			this.nick = nick;
+			this.channel = channel;
+			this.loginName = loginName;
+			this.authstring = authstring;
+            this.authuser = authuser;
+		}
 
-                    Thread.Sleep(1000); // login delay
+        public void SendMessage(string message)
+        {
+            ircClient.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, message);
+		}
+
+        public void SpawnBot()
+        {
+			new Thread(() =>
+			{
+				try
+				{
+					ircClient.Connect(server, port);
+
+                    ircClient.Login(nick, loginName);
+
+					if (Config.Config.Instance.IRCAuthString.Length != 0)
+					{
+                        ircClient.SendMessage(SendType.Message, authuser, authstring);
+
+						Thread.Sleep(1000); // login delay
+					}
+
+					ircClient.RfcJoin(channel);
+
+					ircClient.Listen();
+
+					timer.Start();
                 }
+				catch (Exception ex)
+				{
+					Console.WriteLine(ex.Message);
+                    return;
+				}
 
-                Program.IRC.RfcJoin(channel);
-
-                Program.IRC.Listen();
-
-                timer = new System.Timers.Timer();
-
-                timer.Elapsed += Timer_Callback;
-
-                timer.Enabled = true;
-                timer.AutoReset = true;
-                timer.Interval = TimeSpan.FromSeconds(30.0).TotalMilliseconds;
-                timer.Start();
-
-            
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+			}).Start();
         }
 
-        private static void Timer_Callback(Object source, ElapsedEventArgs e)
+        private void Timer_Callback(Object source, ElapsedEventArgs e)
         {
-            if (Program.IRC.IsConnected)
+            if (ircClient.IsConnected)
             {
                 return;
             }
 
             Console.WriteLine("Bot disconnected! Retrying...");
-            IRC.SpawnBot();
+            this.SpawnBot();
         }
 
-        public static void OnDisconnected(object sender, EventArgs e)
+        private static void OnDisconnected(object sender, EventArgs e)
         {
             Console.WriteLine("Disconnecting");
         }
 
-        public static void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
+        private static void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
         {
             Console.WriteLine("Error: " + e.ErrorMessage);
             Environment.Exit(0);
         }
 
-        public static void OnChannelMessage(object sender, IrcEventArgs e)
+        private static void OnChannelMessage(object sender, IrcEventArgs e)
         {
-            if (e.Data.Message.StartsWith("!") || e.Data.Nick.Contains("idle"))
+            if (e.Data.Message.StartsWith("!", StringComparison.CurrentCulture) || e.Data.Nick.Contains("idle"))
             {
                 return;
             }

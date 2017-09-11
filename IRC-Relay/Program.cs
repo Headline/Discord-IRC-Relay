@@ -16,17 +16,17 @@ namespace IRCRelay
     class Program
     {
         public DiscordSocketClient client;
+
+        private IRC irc;
         private CommandService commands;
         private IServiceProvider services;
 
-        public static IrcClient IRC;
         public static Program Instance;
         
         public static void Main(string[] args)
         {
             Instance = new Program();
-            IRC = new IrcClient();
-            
+
             try
             {
                 Config.Config.Load();
@@ -55,15 +55,18 @@ namespace IRCRelay
 
             await client.LoginAsync(TokenType.Bot, Config.Config.Instance.DiscordBotToken);
             await client.StartAsync();
-            
 
-            /* Run IRC Bot */
-            new Thread(() => 
-            {
-                IRCRelay.IRC.SpawnBot();
+            // TODO IRC Connect here
+            int.TryParse(Config.Config.Instance.IRCPort, out int port);
+            irc = new IRC(Config.Config.Instance.IRCServer,
+                          port,
+                          Config.Config.Instance.IRCNick,
+                          Config.Config.Instance.IRCChannel,
+                          Config.Config.Instance.IRCLoginName,
+                          Config.Config.Instance.IRCAuthString,
+                          Config.Config.Instance.IRCAuthUser);
 
-
-            }).Start();
+            irc.SpawnBot();
 
             await Task.Delay(-1);
         }
@@ -89,8 +92,8 @@ namespace IRCRelay
             string text = "```";
             if (formatted.Contains(text))
             {
-                int start = formatted.IndexOf(text);
-                int end = formatted.IndexOf(text, start + text.Length);
+                int start = formatted.IndexOf(text, StringComparison.CurrentCulture);
+                int end = formatted.IndexOf(text, start + text.Length, StringComparison.CurrentCulture);
 
                 string code = formatted.Substring(start + text.Length, (end - start) - text.Length);
 
@@ -111,7 +114,7 @@ namespace IRCRelay
                 if (Config.Config.Instance.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");
 
-                Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + formatted);
+                irc.SendMessage("<" + messageParam.Author.Username + "> " + formatted);
             }
 
             if (!url.Equals(""))
@@ -119,7 +122,7 @@ namespace IRCRelay
                 if (Config.Config.Instance.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, url, "log.txt");
 
-                Program.IRC.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, "<" + messageParam.Author.Username + "> " + url);
+                irc.SendMessage("<" + messageParam.Author.Username + "> " + url);
             }
         }
 
