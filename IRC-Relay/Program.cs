@@ -128,8 +128,7 @@ namespace IRCRelay
 
         public Task Log(LogMessage msg)
         {
-            Console.WriteLine(msg.ToString());
-            return null;
+            return Task.Run(() => Console.WriteLine(msg.ToString()));
         }
     }
 }
