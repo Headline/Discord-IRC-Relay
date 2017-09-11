@@ -19,8 +19,13 @@ namespace IRCRelay
         private string loginName;
         private string authstring;
         private string authuser;
+        private string targetGuild;
+        private string targetChannel;
 
-		public IRC(string server, int port, string nick, string channel, string loginName, string authstring, string authuser)
+		private bool logMessages;
+
+        public IRC(string server, int port, string nick, string channel, string loginName, 
+                   string authstring, string authuser, string targetGuild, string targetChannel, bool logMessages)
         {
             ircClient = new IrcClient();
 
@@ -34,9 +39,9 @@ namespace IRCRelay
 			ircClient.AutoRelogin = true;
 			ircClient.AutoRejoinOnKick = true;
 
-			ircClient.OnError += new Meebey.SmartIrc4net.ErrorEventHandler(IRCRelay.IRC.OnError);
-			ircClient.OnChannelMessage += new IrcEventHandler(IRCRelay.IRC.OnChannelMessage);
-			ircClient.OnDisconnected += new EventHandler(IRC.OnDisconnected);
+			ircClient.OnError += new Meebey.SmartIrc4net.ErrorEventHandler(this.OnError);
+			ircClient.OnChannelMessage += new IrcEventHandler(this.OnChannelMessage);
+			ircClient.OnDisconnected += new EventHandler(this.OnDisconnected);
 
 			timer = new System.Timers.Timer();
 
@@ -54,11 +59,14 @@ namespace IRCRelay
 			this.loginName = loginName;
 			this.authstring = authstring;
             this.authuser = authuser;
+            this.targetGuild = targetGuild;
+            this.targetChannel = targetChannel;
+            this.logMessages = logMessages;
 		}
 
         public void SendMessage(string message)
         {
-            ircClient.SendMessage(SendType.Message, Config.Config.Instance.IRCChannel, message);
+            ircClient.SendMessage(SendType.Message, channel, message);
 		}
 
         public void SpawnBot()
@@ -71,7 +79,7 @@ namespace IRCRelay
 
                     ircClient.Login(nick, loginName);
 
-					if (Config.Config.Instance.IRCAuthString.Length != 0)
+                    if (authstring.Length != 0)
 					{
                         ircClient.SendMessage(SendType.Message, authuser, authstring);
 
@@ -104,18 +112,18 @@ namespace IRCRelay
             this.SpawnBot();
         }
 
-        private static void OnDisconnected(object sender, EventArgs e)
+        private void OnDisconnected(object sender, EventArgs e)
         {
             Console.WriteLine("Disconnecting");
         }
 
-        private static void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
+        private void OnError(object sender, Meebey.SmartIrc4net.ErrorEventArgs e)
         {
             Console.WriteLine("Error: " + e.ErrorMessage);
             Environment.Exit(0);
         }
 
-        private static void OnChannelMessage(object sender, IrcEventArgs e)
+        private void OnChannelMessage(object sender, IrcEventArgs e)
         {
             if (e.Data.Message.StartsWith("!", StringComparison.CurrentCulture) || e.Data.Nick.Contains("idle"))
             {
@@ -127,10 +135,10 @@ namespace IRCRelay
                 return;
             }
 
-            if (Config.Config.Instance.IRCLogMessages)
+            if (logMessages)
                 LogManager.WriteLog(MsgSendType.IRCToDiscord, e.Data.Nick, e.Data.Message, "log.txt");
 
-            Helpers.SendMessageAllToTarget(Config.Config.Instance.DiscordGuildName, "**<" + e.Data.Nick + ">** " + e.Data.Message, Config.Config.Instance.DiscordChannelName);
+            Helpers.SendMessageAllToTarget(targetGuild, "**<" + e.Data.Nick + ">** " + e.Data.Message, targetChannel);
         }
     }
 }

@@ -8,40 +8,42 @@ using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 
 using IRCRelay.Logs;
+using IRCRelay.Settings;
 
 namespace IRCRelay
 {
     class Program
     {
+        public static Program Instance; //Entry to access DiscordSocketClient for Helpers.cs
         public DiscordSocketClient client;
 
+        /* Instance Vars */
         private IRC irc;
+        private Settings.Config config;
         private CommandService commands;
         private IServiceProvider services;
 
-        public static Program Instance;
-        
         public static void Main(string[] args)
         {
             Instance = new Program();
-
-            try
-            {
-                Config.Config.Load();
-            }
-            catch
-            {
-                Console.WriteLine("Unable to load config. Ensure Settings.xml is formatted correctly.");
-                Config.Config.Default();
-                Config.Config.Instance.Save();
-                return;
-            }
-
+                
             Instance.MainAsync().GetAwaiter().GetResult();
         }
 
         private async Task MainAsync()
         {
+			try
+			{
+				config = Settings.Config.Load();
+			}
+			catch
+			{
+				Console.WriteLine("Unable to load config. Ensure Settings.xml is formatted correctly.");
+                config = Settings.Config.CreateDefaultConfig();
+                Settings.Config.Save(config);
+				return;
+			}
+
             client = new DiscordSocketClient();
             commands = new CommandService();
 
@@ -51,18 +53,20 @@ namespace IRCRelay
 
             client.MessageReceived += OnDiscordMessage;
 
-            await client.LoginAsync(TokenType.Bot, Config.Config.Instance.DiscordBotToken);
+            await client.LoginAsync(TokenType.Bot, config.DiscordBotToken);
             await client.StartAsync();
 
-            // TODO IRC Connect here
-            int.TryParse(Config.Config.Instance.IRCPort, out int port);
-            irc = new IRC(Config.Config.Instance.IRCServer,
+            int.TryParse(config.IRCPort, out int port);
+            irc = new IRC(config.IRCServer,
                           port,
-                          Config.Config.Instance.IRCNick,
-                          Config.Config.Instance.IRCChannel,
-                          Config.Config.Instance.IRCLoginName,
-                          Config.Config.Instance.IRCAuthString,
-                          Config.Config.Instance.IRCAuthUser);
+                          config.IRCNick,
+                          config.IRCChannel,
+                          config.IRCLoginName,
+                          config.IRCAuthString,
+                          config.IRCAuthUser,
+                          config.DiscordGuildName,
+                          config.DiscordChannelName,
+                          config.IRCLogMessages);
 
             irc.SpawnBot();
 
@@ -79,7 +83,7 @@ namespace IRCRelay
 
             if (message.HasCharPrefix('!', ref argPos)) return;
 
-            if (!messageParam.Channel.Name.Contains(Config.Config.Instance.DiscordChannelName)) return;
+            if (!messageParam.Channel.Name.Contains(config.DiscordChannelName)) return;
             if (messageParam.Author.IsBot) return;
 
             /* Santize discord-specific notation to human readable things */
@@ -109,7 +113,7 @@ namespace IRCRelay
 
             if (formatted.Replace(" ", "").Replace("\n", "").Length != 0) // if the string is not empty or just spaces
             {
-                if (Config.Config.Instance.IRCLogMessages)
+                if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");
 
                 irc.SendMessage("<" + messageParam.Author.Username + "> " + formatted);
@@ -117,7 +121,7 @@ namespace IRCRelay
 
             if (!url.Equals(""))
             {
-                if (Config.Config.Instance.IRCLogMessages)
+                if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, url, "log.txt");
 
                 irc.SendMessage("<" + messageParam.Author.Username + "> " + url);
