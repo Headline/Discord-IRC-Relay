@@ -1,15 +1,11 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
-using Discord;
 using Discord.WebSocket;
-using Meebey.SmartIrc4net;
-using System.Collections;
-
 
 namespace IRCRelay
 {
@@ -80,7 +76,7 @@ namespace IRCRelay
         {
             string returnString = input;
 
-            Regex regex = new Regex("<:[A-Za-z]+:[0-9]+>");
+            Regex regex = new Regex("<:[A-Za-z0-9]+:[0-9]+>");
             Match match = regex.Match(input);
             if (match.Success) // contains a mention
             {
@@ -97,6 +93,7 @@ namespace IRCRelay
         {
             foreach (SocketGuild guild in Program.Instance.client.Guilds) // loop through each discord guild
             {
+                
                 if (guild.Name.ToLower().Contains(targetGuild.ToLower())) // find target 
                 {
                     SocketTextChannel channel = FindChannel(guild, targetChannel); // find desired channel

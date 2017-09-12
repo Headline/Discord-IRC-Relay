@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Xml.Serialization;
 
-namespace IRCRelay.Config
+namespace IRCRelay.Settings
 {
 	public class Config
 	{
@@ -27,19 +27,15 @@ namespace IRCRelay.Config
 		[XmlIgnore]
 		public const string FileName = "Settings.xml";
 
-		// Globally accessable instance of loaded configuration.
-		[XmlIgnore]
-		public static Config Instance { get; private set; }
-
 		// Empty constructor for XmlSerializer.
 		public Config()
 		{
 		}
 
 		// Used to load the default configuration if Load() fails.
-		public static void Default()
+		public static Config CreateDefaultConfig()
         {
-            Config.Instance = new Config()
+            Config config = new Config()
             {
                 IRCServer = "server",
                 IRCPort = "port",
@@ -54,24 +50,26 @@ namespace IRCRelay.Config
                 DiscordGuildName = "server name",
                 DiscordChannelName = "text channel"
             };
+
+            return config;
         }
 
         // Loads the configuration from file.
-        public static void Load()
+        public static Config Load()
 		{
 			var serializer = new XmlSerializer(typeof(Config));
 
 			using (var fStream = new FileStream(Config.FileName, FileMode.Open))
-				Config.Instance = (Config)serializer.Deserialize(fStream);
+				 return (Config)serializer.Deserialize(fStream);
 		}
 
 		// Saves the configuration to file.
-		public void Save()
+		public static void Save(Config config)
 		{
 			var serializer = new XmlSerializer(typeof(Config));
 
 			using (var fStream = new FileStream(Config.FileName, FileMode.Create))
-				serializer.Serialize(fStream, this);
+				serializer.Serialize(fStream, config);
 		}
 	}
 }
