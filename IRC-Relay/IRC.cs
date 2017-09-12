@@ -39,9 +39,9 @@ namespace IRCRelay
 			ircClient.AutoRelogin = true;
 			ircClient.AutoRejoinOnKick = true;
 
-			ircClient.OnError += new Meebey.SmartIrc4net.ErrorEventHandler(this.OnError);
-			ircClient.OnChannelMessage += new IrcEventHandler(this.OnChannelMessage);
-			ircClient.OnDisconnected += new EventHandler(this.OnDisconnected);
+			ircClient.OnError += this.OnError;
+			ircClient.OnChannelMessage += this.OnChannelMessage;
+			ircClient.OnDisconnected += this.OnDisconnected;
 
 			timer = new System.Timers.Timer();
 
