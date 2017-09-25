@@ -76,7 +76,7 @@ namespace IRCRelay
         {
             string returnString = input;
 
-            Regex regex = new Regex("<:[A-Za-z0-9]+:[0-9]+>");
+            Regex regex = new Regex("<:[A-Za-z0-9-_]+:[0-9]+>");
             Match match = regex.Match(input);
             if (match.Success) // contains a mention
             {
