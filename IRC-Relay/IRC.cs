@@ -141,7 +141,7 @@ namespace IRCRelay
             string msg = e.Data.Message;
             if (msg.Contains("@everyone"))
             {
-                msg.Replace("@everyone", "\\@everyone");
+                msg = msg.Replace("@everyone", "\\@everyone");
             }
 
             Helpers.SendMessageAllToTarget(targetGuild, "**<" + e.Data.Nick + ">** " + msg, targetChannel);
