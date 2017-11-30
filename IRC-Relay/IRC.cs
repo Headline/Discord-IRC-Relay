@@ -138,7 +138,13 @@ namespace IRCRelay
             if (logMessages)
                 LogManager.WriteLog(MsgSendType.IRCToDiscord, e.Data.Nick, e.Data.Message, "log.txt");
 
-            Helpers.SendMessageAllToTarget(targetGuild, "**<" + e.Data.Nick + ">** " + e.Data.Message, targetChannel);
+            string msg = e.Data.Message;
+            if (msg.Contains("@everyone"))
+            {
+                msg.Replace("@everyone", "\\@everyone");
+            }
+
+            Helpers.SendMessageAllToTarget(targetGuild, "**<" + e.Data.Nick + ">** " + msg, targetChannel);
         }
     }
 }
