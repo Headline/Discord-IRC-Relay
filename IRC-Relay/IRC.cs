@@ -144,7 +144,19 @@ namespace IRCRelay
                 msg = msg.Replace("@everyone", "\\@everyone");
             }
 
-            Helpers.SendMessageAllToTarget(targetGuild, "**<" + e.Data.Nick + ">** " + msg, targetChannel);
+            string prefix = "";
+
+            var usr = e.Data.Irc.GetChannelUser(channel, e.Data.Nick);
+            if (usr.IsOp)
+            {
+                prefix = "@";
+            }
+            else if (usr.IsVoice)
+            {
+                prefix = "+";
+            }
+
+            Helpers.SendMessageAllToTarget(targetGuild, "**<" + prefix + e.Data.Nick + ">** " + msg, targetChannel);
         }
     }
 }
