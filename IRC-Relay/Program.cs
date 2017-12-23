@@ -79,12 +79,9 @@ namespace IRCRelay
             var message = messageParam as SocketUserMessage;
             if (message == null) return;
 
-            int argPos = 0;
+            if (message.Author.Id == client.CurrentUser.Id) return; // block self
 
-            if (message.HasCharPrefix('!', ref argPos)) return;
-
-            if (!messageParam.Channel.Name.Contains(config.DiscordChannelName)) return;
-            if (messageParam.Author.IsBot) return;
+            if (!messageParam.Channel.Name.Contains(config.DiscordChannelName)) return; // only relay trough specified channels
 
             /* Santize discord-specific notation to human readable things */
             string formatted = Helpers.MentionToUsername(messageParam.Content, message);
@@ -111,7 +108,7 @@ namespace IRCRelay
                 return;
             }
 
-            if (formatted.Replace(" ", "").Replace("\n", "").Length != 0) // if the string is not empty or just spaces
+            if (formatted.Replace(" ", "").Replace("\n", "").Replace("\t", "").Length != 0) // if the string is not empty or just spaces
             {
                 if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");

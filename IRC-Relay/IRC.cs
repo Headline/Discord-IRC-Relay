@@ -125,15 +125,8 @@ namespace IRCRelay
 
         private void OnChannelMessage(object sender, IrcEventArgs e)
         {
-            if (e.Data.Message.StartsWith("!", StringComparison.CurrentCulture) || e.Data.Nick.Contains("idle"))
-            {
+            if (e.Data.Nick.Equals(this.nick))
                 return;
-            }
-
-            if (e.Data.Nick.Equals("r"))
-            {
-                return;
-            }
 
             if (logMessages)
                 LogManager.WriteLog(MsgSendType.IRCToDiscord, e.Data.Nick, e.Data.Message, "log.txt");
