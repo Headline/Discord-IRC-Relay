@@ -113,7 +113,12 @@ namespace IRCRelay
                 if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");
 
-                irc.SendMessage("<" + messageParam.Author.Username + "> " + formatted);
+                string[] parts = formatted.Split('\n');
+
+                foreach (String part in parts)
+                {
+                    irc.SendMessage("<" + messageParam.Author.Username + "> " + part);
+                }
             }
 
             if (!url.Equals(""))
