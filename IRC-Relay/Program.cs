@@ -87,6 +87,7 @@ namespace IRCRelay
             string formatted = Helpers.MentionToUsername(messageParam.Content, message);
             formatted = Helpers.EmojiToName(formatted, message);
             formatted = Helpers.ChannelMentionToName(formatted, message);
+            formatted = Helpers.Unescape(formatted);
 
             string text = "```";
             if (formatted.Contains(text))

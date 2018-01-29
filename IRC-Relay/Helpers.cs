@@ -13,7 +13,6 @@ namespace IRCRelay
     {
         public static string UploadMarkDown(string input)
         {
-
             using (var client = new WebClient())
             {
                 client.Headers[HttpRequestHeader.ContentType] = "text/plain";
@@ -52,6 +51,11 @@ namespace IRCRelay
             return returnString;
         }
 
+            public static string Unescape(string input)
+            {
+                return Regex.Replace(input, @"\\([^A-Za-z0-9])", "$1");
+            }
+
         public static string ChannelMentionToName(string input, SocketUserMessage message)
         {
             string returnString = input;
@@ -78,7 +82,7 @@ namespace IRCRelay
 
             Regex regex = new Regex("<:[A-Za-z0-9-_]+:[0-9]+>");
             Match match = regex.Match(input);
-            if (match.Success) // contains a mention
+            if (match.Success) // contains a emoji
             {
                 string substring = input.Substring(match.Index, match.Length);
                 string[] sections = substring.Split(':');
