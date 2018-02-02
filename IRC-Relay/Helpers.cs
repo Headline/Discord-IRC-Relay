@@ -90,7 +90,7 @@ namespace IRCRelay
                 * occured. Thus, we add the length and then subtract after the replace
                 */
                 difference += input.Length;
-                input = ReplaceFirst(input, removal, channel.Name);
+                input = ReplaceFirst(input, removal, "#" + channel.Name);
                 difference -= input.Length;
             }
 
