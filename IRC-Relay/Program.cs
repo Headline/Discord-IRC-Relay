@@ -105,18 +105,28 @@ namespace IRCRelay
             // Send IRC Message
             if (formatted.Length > 1000)
             {
-                await messageParam.Channel.SendMessageAsync("Error: messages > 1000 characters cannot be sent!");
+                await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": messages > 1000 characters cannot be successfully transmitted to IRC!");
+                await messageParam.DeleteAsync();
                 return;
             }
 
-            if (formatted.Replace(" ", "").Replace("\n", "").Replace("\t", "").Length != 0) // if the string is not empty or just spaces
+            string[] parts = formatted.Split('\n');
+
+            if (parts.Length > 3) // don't spam IRC, please.
             {
-                if (config.IRCLogMessages)
-                    LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");
+                await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
+                    " code blocks, please use \\`\\`\\` to open & close the codeblock."  +
+                    "\nYour message has been deleted and was not relayed to IRC. Please try again.");
+                await messageParam.DeleteAsync();
+                return;
+            }
 
-                string[] parts = formatted.Split('\n');
+            if (config.IRCLogMessages)
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");
 
-                foreach (String part in parts)
+            foreach (String part in parts)
+            {
+                if (part.Replace(" ", "").Replace("\n", "").Replace("\t", "").Length != 0) // if the string is not empty or just spaces
                 {
                     irc.SendMessage("<" + messageParam.Author.Username + "> " + part);
                 }
