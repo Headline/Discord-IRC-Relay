@@ -3,6 +3,14 @@
 
 This project is a simple Discord/IRC bot that relays irc messages to and from a Discord channel. This bot's goal is to provide a bridge between IRC channels and Discord text channels as seemlessly as possible.
 
+## Features
+* Discord emoji name conversion (`<:thinking:213123123>` -> `:thinking:`)
+* Discord user mention conversion (`<@293102930912>` -> `Headline`)
+* Discord channel mention conversion (`<#9102930912509>` -> `#general`)
+* Discord intended escaping -> escaped output (`\#general` -> `#general`)
+* Auto code block `hastebin.com` uploads. (code blocks created like \``` \<code> \``` will be uploaded)
+* IRC +v and +o flags are expressed in Discord as '+' & '@', respectively. 
+
 ## Installation
 - Build the project or [download from our releases page](https://github.com/Headline22/Discord-IRC-Relay/releases)
 - Configure Settings.xml
