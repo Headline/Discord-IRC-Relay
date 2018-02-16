@@ -124,20 +124,25 @@ namespace IRCRelay
             if (config.IRCLogMessages)
                 LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");
 
-            foreach (String part in parts)
+            foreach (var attachment in message.Attachments)
+            {
+                irc.SendMessage(messageParam.Author.Username, attachment.Url);
+            }
+
+            foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
             {
                 if (part.Replace(" ", "").Replace("\n", "").Replace("\t", "").Length != 0) // if the string is not empty or just spaces
                 {
-                    irc.SendMessage("<" + messageParam.Author.Username + "> " + part);
+                    irc.SendMessage(messageParam.Author.Username, part);
                 }
             }
 
-            if (!url.Equals(""))
+            if (!url.Equals("")) // hastebin upload is succesfuly if url contains any data
             {
                 if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, url, "log.txt");
 
-                irc.SendMessage("<" + messageParam.Author.Username + "> " + url);
+                irc.SendMessage(messageParam.Author.Username, url);
             }
         }
 

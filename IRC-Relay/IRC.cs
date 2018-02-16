@@ -64,9 +64,9 @@ namespace IRCRelay
             this.logMessages = logMessages;
         }
 
-        public void SendMessage(string message)
+        public void SendMessage(string username, string message)
         {
-            ircClient.SendMessage(SendType.Message, channel, message);
+            ircClient.SendMessage(SendType.Message, channel, "<" + username + "> " + message);
         }
 
         public void SpawnBot()
