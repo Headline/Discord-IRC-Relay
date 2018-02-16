@@ -10,6 +10,7 @@ This project is a simple Discord/IRC bot that relays irc messages to and from a 
 * Discord intended escaping -> escaped output (`\#general` -> `#general`)
 * Auto code block `hastebin.com` uploads. (code blocks created like \``` \<code> \``` will be uploaded)
 * IRC +v and +o flags are expressed in Discord as '+' & '@', respectively. 
+* Discord attachment uploads expressed as urls to IRC
 
 ## Installation
 - Build the project or [download from our releases page](https://github.com/Headline22/Discord-IRC-Relay/releases)
