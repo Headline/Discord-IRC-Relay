@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using IRCRelay.Logs;
 using IRCRelay.Settings;
+using Discord.Net.Providers.WS4Net;
 
 namespace IRCRelay
 {
@@ -44,7 +45,13 @@ namespace IRCRelay
                 return;
             }
 
-            client = new DiscordSocketClient();
+            var socketConfig = new DiscordSocketConfig
+            {
+                WebSocketProvider = WS4NetProvider.Instance,
+                LogLevel = LogSeverity.Verbose
+            };
+
+            client = new DiscordSocketClient(socketConfig);
             commands = new CommandService();
 
             client.Log += Log;
