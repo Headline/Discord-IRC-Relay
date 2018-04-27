@@ -149,6 +149,18 @@ namespace IRCRelay
                 prefix = "+";
             }
 
+            if (Program.config.SpamFilter != null) //bcompat for older configurations
+            {
+                foreach (string badstr in Program.config.SpamFilter)
+                {
+                    if (msg.ToLower().Contains(badstr.ToLower()))
+                    {
+                        ircClient.SendMessage(SendType.Message, channel, "Message with blacklisted input will not be relayed!");
+                        return;
+                    }
+                }
+            }
+
             Helpers.SendMessageAllToTarget(targetGuild, "**<" + prefix + e.Data.Nick + ">** " + msg, targetChannel);
         }
     }

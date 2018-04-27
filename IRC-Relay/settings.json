@@ -9,5 +9,7 @@
   "IRCAuthString": "some command here",
   "DiscordBotToken": "token",
   "DiscordGuildName": "server name",
-  "DiscordChannelName": "text channel"
+  "DiscordChannelName": "text channel",
+  "SpamFilter": [
+  ]
 }

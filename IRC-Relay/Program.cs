@@ -23,7 +23,7 @@ namespace IRCRelay
         private IRC irc;
         private CommandService commands;
         private IServiceProvider services;
-        private static dynamic config;
+        public static dynamic config;
 
         public static void Main(string[] args)
         {
@@ -87,6 +87,20 @@ namespace IRCRelay
             formatted = Helpers.ChannelMentionToName(formatted, message);
             formatted = Helpers.Unescape(formatted);
 
+            if (config.SpamFilter != null) //bcompat for older configurations
+            {
+                foreach (string badstr in config.SpamFilter)
+                {
+                    if (formatted.ToLower().Contains(badstr.ToLower()))
+                    {
+                        await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Message with blacklisted input will not be relayed!");
+                        await messageParam.DeleteAsync();
+                        return;
+                    }
+                }
+            }
+
+            
             string text = "```";
             if (formatted.Contains(text))
             {
