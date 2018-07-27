@@ -4,6 +4,7 @@ using Meebey.SmartIrc4net;
 using System.Threading;
 using System.Timers;
 using IRCRelay.Logs;
+using System.Text.RegularExpressions;
 
 namespace IRCRelay
 {
@@ -161,7 +162,7 @@ namespace IRCRelay
                 }
             }
 
-            Helpers.SendMessageAllToTarget(targetGuild, "**<" + prefix + e.Data.Nick + ">** " + msg, targetChannel);
+            Helpers.SendMessageAllToTarget(targetGuild, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg, targetChannel);
         }
     }
 }
