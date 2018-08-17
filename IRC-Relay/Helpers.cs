@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 using Discord.WebSocket;
+using System.Text;
 
 namespace IRCRelay
 {
@@ -64,7 +65,54 @@ namespace IRCRelay
 
         public static string Unescape(string input)
         {
-            return Regex.Replace(input, @"\\([^A-Za-z0-9])", "$1");
+            /* Main StringBuilder for messages that aren't in '`' */
+            StringBuilder sb = new StringBuilder();
+
+            /*
+            * locations - List of indices where the first '`' lies
+            * peices - List of strings which live inbetween the '`'s
+            */
+            List<int> locations = new List<int>();
+            List<StringBuilder> peices = new List<StringBuilder>();
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (input[i] == '`') // we hit a '`'
+                {
+                    int j;
+
+                    StringBuilder slice = new StringBuilder(); // used for capturing the str inbetween '`'
+                    slice.Append('`'); // append the '`' for insertion later
+
+                    /* we'll loop from here until we encounter the next '`',
+                    * appending as we go.
+                    */
+                    for (j = i+1; j < input.Length && input[j] != '`'; j++) {
+                        slice.Append(input[j]);
+                    }
+
+                    slice.Append('`'); // append the '`' for insertion later
+
+                    locations.Add(i); // push the index of the first '`'
+                    peices.Add(slice); // push the captured string
+
+                    i = j; // advance the outer loop to where our inner one stopped
+                }
+                else // we didn't hit a '`', so just append :)
+                {
+                    sb.Append(input[i]);
+                }
+            }
+
+            // From here we prep the return string by doing our regex on the input that's not in '`'
+            string retstr = Regex.Replace(sb.ToString(), @"\\([^A-Za-z0-9])", "$1");
+
+            // Now we'll just loop the peices, inserting @ the locations we saved earlier
+            for (int i = 0; i < peices.Count; i++)
+            {
+                retstr = retstr.Insert(locations[i], peices[i].ToString());
+            }
+
+            return retstr; // thank fuck we're done
         }
 
         public static string ChannelMentionToName(string input, SocketUserMessage message)
