@@ -90,7 +90,8 @@ namespace IRCRelay
                         slice.Append(input[j]);
                     }
 
-                    slice.Append('`'); // append the '`' for insertion later
+                    if (j < input.Length)
+                        slice.Append('`'); // append the '`' for insertion later
 
                     locations.Add(i); // push the index of the first '`'
                     peices.Add(slice); // push the captured string
