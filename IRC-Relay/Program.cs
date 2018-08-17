@@ -97,8 +97,22 @@ namespace IRCRelay
                 }
             }
 
+            string formatted = messageParam.Content;
+            string text = "```";
+            if (formatted.Contains(text))
+            {
+                int start = formatted.IndexOf(text, StringComparison.CurrentCulture);
+                int end = formatted.IndexOf(text, start + text.Length, StringComparison.CurrentCulture);
+
+                string code = formatted.Substring(start + text.Length, (end - start) - text.Length);
+
+                url = Helpers.UploadMarkDown(code);
+
+                formatted = formatted.Remove(start, (end - start) + text.Length);
+            }
+
             /* Santize discord-specific notation to human readable things */
-            string formatted = Helpers.MentionToUsername(messageParam.Content, message);
+            formatted = Helpers.MentionToUsername(formatted, message);
             formatted = Helpers.EmojiToName(formatted, message);
             formatted = Helpers.ChannelMentionToName(formatted, message);
             formatted = Helpers.Unescape(formatted);
@@ -114,20 +128,6 @@ namespace IRCRelay
                         return;
                     }
                 }
-            }
-
-            
-            string text = "```";
-            if (formatted.Contains(text))
-            {
-                int start = formatted.IndexOf(text, StringComparison.CurrentCulture);
-                int end = formatted.IndexOf(text, start + text.Length, StringComparison.CurrentCulture);
-
-                string code = formatted.Substring(start + text.Length, (end - start) - text.Length);
-
-                url = Helpers.UploadMarkDown(code);
-
-                formatted = formatted.Remove(start, (end - start) + text.Length);
             }
 
             // Send IRC Message
