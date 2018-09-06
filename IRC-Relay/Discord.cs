@@ -171,28 +171,29 @@ namespace IRCRelay
                 return;
             }
 
+            string username = (messageParam.Author as SocketGuildUser)?.Nickname ?? message.Author.Username;
             if (config.IRCLogMessages)
-                LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, formatted, "log.txt");
+                LogManager.WriteLog(MsgSendType.DiscordToIRC, username, formatted, "log.txt");
 
             foreach (var attachment in message.Attachments)
             {
-                session.SendMessage(Session.MessageDestination.IRC, attachment.Url, messageParam.Author.Username);
+                session.SendMessage(Session.MessageDestination.IRC, attachment.Url, username);
             }
 
             foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
             {
                 if (part.Replace(" ", "").Replace("\n", "").Replace("\t", "").Length != 0) // if the string is not empty or just spaces
                 {
-                    session.SendMessage(Session.MessageDestination.IRC, part, messageParam.Author.Username);
+                    session.SendMessage(Session.MessageDestination.IRC, part, username);
                 }
             }
 
             if (!url.Equals("")) // hastebin upload is succesfuly if url contains any data
             {
                 if (config.IRCLogMessages)
-                    LogManager.WriteLog(MsgSendType.DiscordToIRC, messageParam.Author.Username, url, "log.txt");
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, url, "log.txt");
 
-                session.SendMessage(Session.MessageDestination.IRC, url, messageParam.Author.Username);
+                session.SendMessage(Session.MessageDestination.IRC, url, username);
             }
         }
 
