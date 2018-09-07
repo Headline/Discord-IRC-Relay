@@ -76,7 +76,7 @@ namespace IRCRelay
 
         public async Task OnDiscordConnected()
         {
-            await session.Discord.Log(new LogMessage(LogSeverity.Critical, "DiscSpawn", "Discord bot initalized."));
+            await Discord.Log(new LogMessage(LogSeverity.Critical, "DiscSpawn", "Discord bot initalized."));
         }
 
         /* When we disconnect from discord (we got booted off), we'll remake */
@@ -197,7 +197,7 @@ namespace IRCRelay
             }
         }
 
-        public Task Log(LogMessage msg)
+        public static Task Log(LogMessage msg)
         {
             return Task.Run(() => Console.WriteLine(msg.ToString()));
         }
@@ -224,9 +224,7 @@ namespace IRCRelay
                 }
 
                 string key = (string)obj["key"];
-                string hasteUrl = "https://hastebin.com/" + key + ".cs";
-
-                return hasteUrl;
+                return "https://hastebin.com/" + key + ".cs";
             }
         }
         public static string MentionToUsername(string input, SocketUserMessage message)

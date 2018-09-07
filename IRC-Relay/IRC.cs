@@ -87,7 +87,7 @@ namespace IRCRelay
 
         private void OnConnected(object sender, EventArgs e)
         {
-            session.Discord.Log(new LogMessage(LogSeverity.Critical, "IRCSpawn", "IRC bot initalized."));
+            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCSpawn", "IRC bot initalized."));
         }
 
         private void OnError(object sender, ErrorEventArgs e)
@@ -96,7 +96,7 @@ namespace IRCRelay
              * this Disconnect call */
             new System.Threading.Thread(() => { session.Kill(); }).Start();
 
-            session.Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
+            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
         }
 
         private void OnChannelMessage(object sender, IrcEventArgs e)

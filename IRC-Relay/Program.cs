@@ -19,6 +19,7 @@ using System;
 using System.IO;
 
 using System.Threading.Tasks;
+using Discord;
 using JsonConfig;
 
 namespace IRCRelay
@@ -39,7 +40,7 @@ namespace IRCRelay
             do
             {
                 await session.StartSession();
-                Console.WriteLine("Session failure... New session starting.");
+                await Discord.Log(new LogMessage(LogSeverity.Critical, "Main", "Session officially over. Starting new..."));
             } while (!session.IsAlive);   
         }
     }
