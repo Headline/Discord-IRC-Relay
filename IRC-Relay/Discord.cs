@@ -97,6 +97,7 @@ namespace IRCRelay
             if (message.Author.Id == client.CurrentUser.Id) return; // block self
 
             if (!messageParam.Channel.Name.Contains(config.DiscordChannelName)) return; // only relay trough specified channels
+            if (messageParam.Content.Contains("__NEVER_BE_SENT_PLEASE")) return; // don't break me
 
             if (config.DiscordUserIDBlacklist != null) //bcompat support
             {
@@ -259,56 +260,26 @@ namespace IRCRelay
 
         public static string Unescape(string input)
         {
-            /* Main StringBuilder for messages that aren't in '`' */
-            StringBuilder sb = new StringBuilder();
+            Regex reg = new Regex("\\`[^`]*\\`");
 
-            /*
-            * locations - List of indices where the first '`' lies
-            * peices - List of strings which live inbetween the '`'s
-            */
-            List<int> locations = new List<int>();
-            List<StringBuilder> peices = new List<StringBuilder>();
-            for (int i = 0; i < input.Length; i++)
-            {
-                if (input[i] == '`') // we hit a '`'
-                {
-                    int j;
+            int count = 0;
+            List<string> peices = new List<string>();
+            reg.Replace(input, (m) => {
+                peices.Add(m.Value);
+                input = input.Replace(m.Value, string.Format("__NEVER_BE_SENT_PLEASE_{0}_!@#%", count));
+                count++;
+                return ""; // doesn't matter what we replace with
+            });
 
-                    StringBuilder slice = new StringBuilder(); // used for capturing the str inbetween '`'
-                    slice.Append('`'); // append the '`' for insertion later
-
-                    /* we'll loop from here until we encounter the next '`',
-                    * appending as we go.
-                    */
-                    for (j = i + 1; j < input.Length && input[j] != '`'; j++)
-                    {
-                        slice.Append(input[j]);
-                    }
-
-                    if (j < input.Length)
-                        slice.Append('`'); // append the '`' for insertion later
-
-                    locations.Add(i); // push the index of the first '`'
-                    peices.Add(slice); // push the captured string
-
-                    i = j; // advance the outer loop to where our inner one stopped
-                }
-                else // we didn't hit a '`', so just append :)
-                {
-                    sb.Append(input[i]);
-                }
-            }
+            string retstr = Regex.Replace(input, @"\\([^A-Za-z0-9])", "$1");
 
             // From here we prep the return string by doing our regex on the input that's not in '`'
-            string retstr = Regex.Replace(sb.ToString(), @"\\([^A-Za-z0-9])", "$1");
+            reg = new Regex("__NEVER_BE_SENT_PLEASE_([0-9]+)_!@#%");
+            input = reg.Replace(retstr, (m) => {
+                return peices[int.Parse(m.Result("$1"))].ToString();
+            });
 
-            // Now we'll just loop the peices, inserting @ the locations we saved earlier
-            for (int i = 0; i < peices.Count; i++)
-            {
-                retstr = retstr.Insert(locations[i], peices[i].ToString());
-            }
-
-            return retstr; // thank fuck we're done
+            return input; // thank fuck we're done
         }
 
         public static string ChannelMentionToName(string input, SocketUserMessage message)
