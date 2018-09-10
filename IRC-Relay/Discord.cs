@@ -91,7 +91,6 @@ namespace IRCRelay
 
         public async Task OnDiscordMessage(SocketMessage messageParam)
         {
-            string url = "";
             if (!(messageParam is SocketUserMessage message)) return;
 
             if (message.Author.Id == client.CurrentUser.Id) return; // block self
@@ -114,21 +113,8 @@ namespace IRCRelay
                 }
             }
 
-            string formatted = messageParam.Content;
-            string text = "```";
-            if (formatted.Contains(text))
-            {
-                int start = formatted.IndexOf(text, StringComparison.CurrentCulture);
-                int end = formatted.IndexOf(text, start + text.Length, StringComparison.CurrentCulture);
-
-                string code = formatted.Substring(start + text.Length, (end - start) - text.Length);
-
-                url = UploadMarkDown(code);
-
-                formatted = formatted.Remove(start, (end - start) + text.Length);
-            }
-
             /* Santize discord-specific notation to human readable things */
+            string formatted = CodeblockToURL(messageParam.Content, out string url);
             formatted = MentionToUsername(formatted, message);
             formatted = EmojiToName(formatted, message);
             formatted = ChannelMentionToName(formatted, message);
@@ -156,7 +142,6 @@ namespace IRCRelay
             }
 
             string[] parts = formatted.Split('\n');
-
             if (parts.Length > 3) // don't spam IRC, please.
             {
                 await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
@@ -210,6 +195,26 @@ namespace IRCRelay
 
         /**     Helper methods      **/
 
+        public static string CodeblockToURL(string input, out string url)
+        {
+            string text = "```";
+            if (input.Contains("```"))
+            {
+                int start = input.IndexOf(text, StringComparison.CurrentCulture);
+                int end = input.IndexOf(text, start + text.Length, StringComparison.CurrentCulture);
+
+                string code = input.Substring(start + text.Length, (end - start) - text.Length);
+
+                url = UploadMarkDown(code);
+
+                input = input.Remove(start, (end - start) + text.Length);
+            }
+            else
+            {
+                url = "";
+            }
+            return input;
+        }
         public static string UploadMarkDown(string input)
         {
             using (var client = new WebClient())
