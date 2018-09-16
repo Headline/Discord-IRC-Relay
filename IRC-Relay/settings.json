@@ -15,5 +15,6 @@
   "IRCNameBlacklist": [
   ],
   "DiscordUserIDBlacklist": [
-  ]
+  ],
+  "StikkedCreateUrlAndKey":  ""
 }

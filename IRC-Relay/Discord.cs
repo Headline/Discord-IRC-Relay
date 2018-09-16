@@ -31,6 +31,7 @@ using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.Collections.Generic;
+using System.Net.Http;
 
 namespace IRCRelay
 {
@@ -98,7 +99,7 @@ namespace IRCRelay
             if (!messageParam.Channel.Name.Contains(config.DiscordChannelName)) return; // only relay trough specified channels
             if (messageParam.Content.Contains("__NEVER_BE_SENT_PLEASE")) return; // don't break me
 
-            if (config.DiscordUserIDBlacklist != null) //bcompat support
+            if (Program.HasMember(config, "DiscordUserIDBlacklist")) //bcompat for older configurations
             {
                 /**
                  * We'll loop blacklisted user ids. If the user ID is found,
@@ -114,13 +115,13 @@ namespace IRCRelay
             }
 
             /* Santize discord-specific notation to human readable things */
-            string formatted = DoURLMessage(messageParam.Content, message);
+            string formatted = await DoURLMessage(messageParam.Content, message);
             formatted = MentionToNickname(formatted, message);
             formatted = EmojiToName(formatted, message);
             formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
 
-            if (config.SpamFilter != null) //bcompat for older configurations
+            if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
             {
                 foreach (string badstr in config.SpamFilter)
                 {
@@ -187,7 +188,7 @@ namespace IRCRelay
 
         /**     Helper methods      **/
 
-        public string DoURLMessage(string input, SocketUserMessage msg)
+        public async Task<string> DoURLMessage(string input, SocketUserMessage msg)
         {
             string text = "```";
             if (input.Contains("```"))
@@ -197,20 +198,61 @@ namespace IRCRelay
 
                 string code = input.Substring(start + text.Length, (end - start) - text.Length);
 
-                using (var client = new WebClient())
-                {
-                    client.Headers[HttpRequestHeader.ContentType] = "text/plain";
-
-                    client.UploadDataCompleted += Client_UploadDataCompleted;
-                    client.UploadDataAsync(new Uri("https://hastebin.com/documents"), null, Encoding.ASCII.GetBytes(input), msg);
-                }
+                if (Program.HasMember(config, "StikkedCreateUrlAndKey") && config.StikkedCreateUrlAndKey.Length > 0)
+                    await DoStikkedUpload(code, msg);
+                else
+                    DoHastebinUpload(code, msg);
 
                 input = input.Remove(start, (end - start) + text.Length);
             }
             return input;
         }
 
-        private void Client_UploadDataCompleted(object sender, UploadDataCompletedEventArgs e)
+        private async Task DoStikkedUpload(string input, SocketUserMessage msg)
+        {
+            string[] langs = { "cpp", "csharp", "c", "java", "php"}; // we'll only do a small subset
+            string language = "";
+            for (int i = 0; i < langs.Length && language.Length == 0; i++)
+            {
+                if (input.StartsWith(langs[i]))
+                {
+                    language = langs[i];
+                    input = input.Remove(0, langs[i].Length);
+                }
+            }
+
+            using (var client = new HttpClient())
+            {
+                string username = (msg.Author as SocketGuildUser)?.Nickname ?? msg.Author.Username;
+                var values = new Dictionary<string, string>
+                {
+                    { "name", username },
+                    { "text", input.Trim() },
+                    { "title", "Automated discord upload" },
+                    { "lang", language }
+                };
+                var content = new FormUrlEncodedContent(values);
+                var response = await client.PostAsync(config.StikkedCreateUrlAndKey, content); // config.StikkedCreateUrlAndKey
+                var url = await response.Content.ReadAsStringAsync();
+
+                if (config.IRCLogMessages)
+                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, url, "log.txt");
+
+                session.SendMessage(Session.MessageDestination.IRC, url, username);
+            }
+        }
+
+        private void DoHastebinUpload(string input, SocketUserMessage msg)
+        {
+            using (var client = new WebClient())
+            {
+                client.Headers[HttpRequestHeader.ContentType] = "text/plain";
+                client.UploadDataCompleted += Hastebin_UploadCompleted;
+                client.UploadDataAsync(new Uri("https://hastebin.com/documents"), null, Encoding.ASCII.GetBytes(input), msg);
+            }
+        }
+
+        private void Hastebin_UploadCompleted(object sender, UploadDataCompletedEventArgs e)
         {
             if (e.Error != null)
             {
@@ -231,6 +273,7 @@ namespace IRCRelay
                 session.SendMessage(Session.MessageDestination.IRC, result, msg.Author.Username);
             }
         }
+
         public static string MentionToNickname(string input, SocketUserMessage message)
         {
             Regex regex = new Regex("<@!?([0-9]+)>"); // create patern

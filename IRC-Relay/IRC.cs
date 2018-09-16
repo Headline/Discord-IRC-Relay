@@ -102,7 +102,7 @@ namespace IRCRelay
             if (e.Data.Nick.Equals(this.config.IRCNick))
                 return;
 
-            if (config.IRCNameBlacklist != null) // bcompat support
+            if (Program.HasMember(config, "IRCNameBlacklist")) //bcompat for older configurations
             {
                 /**
                  * We'll loop all blacklisted names, if the sender
@@ -138,7 +138,7 @@ namespace IRCRelay
                 prefix = "+";
             }
 
-            if (config.SpamFilter != null) //bcompat for older configurations
+            if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
             {
                 foreach (string badstr in config.SpamFilter)
                 {

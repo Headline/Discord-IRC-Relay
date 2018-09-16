@@ -43,5 +43,10 @@ namespace IRCRelay
                 await Discord.Log(new LogMessage(LogSeverity.Critical, "Main", "Session officially over. Starting new..."));
             } while (!session.IsAlive);   
         }
+
+        public static bool HasMember(dynamic obj, string name)
+        {
+            return obj.GetType().GetMember(name) != null;
+        }
     }
 }
