@@ -250,7 +250,7 @@ namespace IRCRelay
                 if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, username, url, "log.txt");
 
-                session.SendMessage(Session.MessageDestination.IRC, url, username);
+                session.SendMessage(Session.TargetBot.IRC, url, username);
             }
         }
 
