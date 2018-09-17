@@ -85,9 +85,18 @@ namespace IRCRelay
         {
             /* Create a new thread to kill the session. We cannot block
              * this Disconnect call */
-            new System.Threading.Thread(() => { session.Kill(); }).Start();
+            new System.Threading.Thread(async() => { await session.Kill(Session.TargetBot.Discord); }).Start();
 
             await Log(new LogMessage(LogSeverity.Critical, "OnDiscordDisconnect", ex.Message));
+        }
+
+        public void Kill()
+        {
+            try
+            {
+                this.Dispose();
+            }
+            catch { }
         }
 
         public async Task OnDiscordMessage(SocketMessage messageParam)
@@ -164,21 +173,24 @@ namespace IRCRelay
 
             foreach (var attachment in message.Attachments)
             {
-                session.SendMessage(Session.MessageDestination.IRC, attachment.Url, username);
+                session.SendMessage(Session.TargetBot.IRC, attachment.Url, username);
             }
 
             foreach (String part in parts) // we're going to send each line indpependently instead of letting irc clients handle it.
             {
                 if (part.Trim().Length != 0) // if the string is not empty or just spaces
                 {
-                    session.SendMessage(Session.MessageDestination.IRC, part, username);
+                    session.SendMessage(Session.TargetBot.IRC, part, username);
                 }
             }
         }
 
         public static Task Log(LogMessage msg)
         {
-            return Task.Run(() => Console.WriteLine(msg.ToString()));
+            return Task.Run(() => {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(msg.ToString());
+            });
         }
 
         public void Dispose()
@@ -270,7 +282,7 @@ namespace IRCRelay
                 if (config.IRCLogMessages)
                     LogManager.WriteLog(MsgSendType.DiscordToIRC, msg.Author.Username, result, "log.txt");
 
-                session.SendMessage(Session.MessageDestination.IRC, result, msg.Author.Username);
+                session.SendMessage(Session.TargetBot.IRC, result, msg.Author.Username);
             }
         }
 
