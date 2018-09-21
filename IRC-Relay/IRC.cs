@@ -47,9 +47,6 @@ namespace IRCRelay
 
                 ActiveChannelSyncing = true,
 
-                AutoRetry = true,
-                AutoRejoin = true,
-                AutoRelogin = true,
                 AutoRejoinOnKick = true
             };
 
