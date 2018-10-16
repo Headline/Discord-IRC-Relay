@@ -50,8 +50,8 @@ namespace IRCRelay
                 AutoRejoinOnKick = true
             };
 
-            ircClient.OnConnected += OnConnected;
-            ircClient.OnError += this.OnError;
+            ircClient.OnConnected += this.OnConnected;
+            ircClient.OnDisconnected += this.OnDisconnected;
             ircClient.OnChannelMessage += this.OnChannelMessage;
         }
 
@@ -85,13 +85,13 @@ namespace IRCRelay
             Discord.Log(new LogMessage(LogSeverity.Critical, "IRCSpawn", "IRC bot initalized."));
         }
 
-        private void OnError(object sender, ErrorEventArgs e)
+        private void OnDisconnected(object sender, EventArgs e)
         {
             /* Create a new thread to kill the session. We cannot block
              * this Disconnect call */
             new Thread(async() => await session.Kill(Session.TargetBot.Both)).Start();
 
-            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", e.ErrorMessage));
+            Discord.Log(new LogMessage(LogSeverity.Critical, "IRCOnError", "Irc Disconnected"));
         }
 
         private void OnChannelMessage(object sender, IrcEventArgs e)
