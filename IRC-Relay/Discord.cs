@@ -124,11 +124,33 @@ namespace IRCRelay
             }
 
             /* Santize discord-specific notation to human readable things */
-            string formatted = await DoURLMessage(messageParam.Content, message);
+            string formatted = RemoveCodeblock(messageParam.Content, message, out string code);
             formatted = MentionToNickname(formatted, message);
             formatted = EmojiToName(formatted, message);
             formatted = ChannelMentionToName(formatted, message);
             formatted = Unescape(formatted);
+
+            string[] parts = formatted.Split('\n');
+            if (parts.Length > 3) // don't spam IRC, please.
+            {
+                await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
+                    " code blocks, please use \\`\\`\\` to open & close the codeblock." +
+                    "\nYour message has been deleted and was not relayed to IRC. Please try again.");
+                await messageParam.DeleteAsync();
+
+                await messageParam.Author.SendMessageAsync("To prevent you from having to re-type your message,"
+                    + " here's what you tried to send: \n ```"
+                    + messageParam.Content
+                    + "```");
+
+                return;
+            }
+
+            if (Program.HasMember(config, "StikkedCreateUrlAndKey") && config.StikkedCreateUrlAndKey.Length > 0)
+                await DoStikkedUpload(code, message);
+            else
+                DoHastebinUpload(code, message);
+
 
             if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
             {
@@ -148,22 +170,6 @@ namespace IRCRelay
             {
                 await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": messages > 1000 characters cannot be successfully transmitted to IRC!");
                 await messageParam.DeleteAsync();
-                return;
-            }
-
-            string[] parts = formatted.Split('\n');
-            if (parts.Length > 3) // don't spam IRC, please.
-            {
-                await messageParam.Channel.SendMessageAsync(messageParam.Author.Mention + ": Too many lines! If you're meaning to post" +
-                    " code blocks, please use \\`\\`\\` to open & close the codeblock." +
-                    "\nYour message has been deleted and was not relayed to IRC. Please try again.");
-                await messageParam.DeleteAsync();
-
-                await messageParam.Author.SendMessageAsync("To prevent you from having to re-type your message,"
-                    + " here's what you tried to send: \n ```"
-                    + messageParam.Content
-                    + "```");
-
                 return;
             }
 
@@ -200,8 +206,9 @@ namespace IRCRelay
 
         /**     Helper methods      **/
 
-        public async Task<string> DoURLMessage(string input, SocketUserMessage msg)
+        public string RemoveCodeblock(string input, SocketUserMessage msg, out string codeout)
         {
+            codeout = "";
             string text = "```";
             if (input.Contains("```"))
             {
@@ -209,12 +216,7 @@ namespace IRCRelay
                 int end = input.IndexOf(text, start + text.Length, StringComparison.CurrentCulture);
 
                 string code = input.Substring(start + text.Length, (end - start) - text.Length);
-
-                if (Program.HasMember(config, "StikkedCreateUrlAndKey") && config.StikkedCreateUrlAndKey.Length > 0)
-                    await DoStikkedUpload(code, msg);
-                else
-                    DoHastebinUpload(code, msg);
-
+                codeout = code; //await DoStikkedUpload(code, msg);
                 input = input.Remove(start, (end - start) + text.Length);
             }
             return input;
@@ -246,11 +248,6 @@ namespace IRCRelay
                 var content = new FormUrlEncodedContent(values);
                 var response = await client.PostAsync(config.StikkedCreateUrlAndKey, content); // config.StikkedCreateUrlAndKey
                 var url = await response.Content.ReadAsStringAsync();
-
-                if (config.IRCLogMessages)
-                    LogManager.WriteLog(MsgSendType.DiscordToIRC, username, url, "log.txt");
-
-                session.SendMessage(Session.TargetBot.IRC, url, username);
             }
         }
 
