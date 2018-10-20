@@ -146,11 +146,13 @@ namespace IRCRelay
                 return;
             }
 
-            if (Program.HasMember(config, "StikkedCreateUrlAndKey") && config.StikkedCreateUrlAndKey.Length > 0)
-                await DoStikkedUpload(code, message);
-            else
-                DoHastebinUpload(code, message);
-
+            if (code.Length > 0)
+            {
+                if (Program.HasMember(config, "StikkedCreateUrlAndKey") && config.StikkedCreateUrlAndKey.Length > 0)
+                    await DoStikkedUpload(code, message);
+                else
+                    DoHastebinUpload(code, message);
+            }
 
             if (Program.HasMember(config, "SpamFilter")) //bcompat for older configurations
             {
