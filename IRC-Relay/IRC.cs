@@ -57,7 +57,19 @@ namespace IRCRelay
 
         public void SendMessage(string username, string message)
         {
-            ircClient.SendMessage(SendType.Message, config.IRCChannel, "<" + username + "> " + message);
+            if (!Program.HasMember(config, "HideDiscordNames")) // bcompat
+            {
+                ircClient.SendMessage(SendType.Message, config.IRCChannel, "<" + username + "> " + message);
+                return;
+            }
+            if (!config.HideDiscordNames) // normal behavior (don't hide)
+            {
+                ircClient.SendMessage(SendType.Message, config.IRCChannel, "<" + username + "> " + message);
+                return;
+            }
+
+            // now let's hide.
+            ircClient.SendMessage(SendType.Message, config.IRCChannel, message);
         }
 
         public async Task SpawnBot()
@@ -147,7 +159,19 @@ namespace IRCRelay
                 }
             }
 
-            session.SendMessage(Session.TargetBot.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);
+            if (!Program.HasMember(config, "HideIRCNames")) // bcompat
+            {
+                session.SendMessage(Session.TargetBot.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);
+                return;
+            }
+            if (!config.HideIRCNames) // normal behavior (don't hide)
+            {
+                session.SendMessage(Session.TargetBot.Discord, "**<" + prefix + Regex.Escape(e.Data.Nick) + ">** " + msg);
+                return;
+            }
+
+            // now let's hide.
+            session.SendMessage(Session.TargetBot.Discord, msg);
         }
     }
 }

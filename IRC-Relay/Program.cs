@@ -54,7 +54,15 @@ namespace IRCRelay
 
         public static bool HasMember(dynamic obj, string name)
         {
-            return obj.GetType().GetMember(name) != null;
+            var it = obj.Keys.GetEnumerator();
+            while (it.MoveNext())
+            {
+                if (it.Current == name)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

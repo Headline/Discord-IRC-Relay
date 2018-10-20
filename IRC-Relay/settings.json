@@ -16,5 +16,7 @@
   ],
   "DiscordUserIDBlacklist": [
   ],
-  "StikkedCreateUrlAndKey":  ""
+  "StikkedCreateUrlAndKey": "",
+  "HideDiscordNames": false,
+  "HideIRCNames":  false
 }
